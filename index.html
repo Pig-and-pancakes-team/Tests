@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-and-P Editor | Universal Matrix Hub</title>
+    <style>
+        :root {
+            --bg: #0b0e14; --panel: #161c24; --blue: #00e5ff; --pink: #ff2a74;
+            --text: #f0f4f8; --muted: #6272a4; --green: #50fa7b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: monospace; padding: 20px; font-size: 18px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: var(--blue); text-transform: uppercase; text-align: center; margin-bottom: 25px; font-size: 2.3rem; border-bottom: 4px double var(--blue); padding-bottom: 10px; }
+        section { background: var(--panel); border: 2px solid #232e3b; padding: 20px; margin-bottom: 25px; }
+        .pix { text-transform: uppercase; color: var(--pink); font-weight: bold; margin-bottom: 15px; display: block; }
+        .hub-form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #0d1117; padding: 20px; border: 1px dashed var(--pink); }
+        .f-group { display: flex; flex-direction: column; gap: 5px; }
+        .f-full { grid-column: 1 / -1; }
+        label { color: var(--blue); font-size: 0.85rem; text-transform: uppercase; font-weight: bold; }
+        input, textarea { background: #000; border: 1px solid #2d3b4e; color: #fff; padding: 10px; font-family: inherit; font-size: 16px; }
+        .btn { display: inline-block; width: 100%; padding: 10px; background: transparent; border: 2px solid var(--blue); color: var(--blue); font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 15px; font-family: inherit; text-align: center; text-decoration: none; }
+        .btn:hover { background: var(--blue); color: var(--bg); box-shadow: 0 0 10px var(--blue); }
+        .media-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-top: 15px; }
+        .m-box { background: #11161d; border: 2px dashed #2d3b4e; padding: 15px; position: relative; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🛰 P&P Universal Internet Matrix</h1>
+
+    <!-- ФОРМА ОТПРАВКИ -->
+    <section>
+        <span class="pix">💾 Step 1: Broadcast Cartridge into Internet Grid</span>
+        <form id="matrixForm" class="hub-form">
+            <div class="f-group">
+                <label>Game Title</label>
+                <input type="text" id="cTitle" required placeholder="e.g., Error Knight">
+            </div>
+            <div class="f-group">
+                <label>Creator Nickname</label>
+                <input type="text" id="cAuthor" required placeholder="e.g., Vasya322">
+            </div>
+            <div class="f-group f-full">
+                <label>Short Description</label>
+                <textarea id="cDesc" rows="2" required placeholder="Describe your standalone build..."></textarea>
+            </div>
+            <div class="f-group f-full">
+                <label>Select .SAV File</label>
+                <input type="file" id="cFile" accept=".sav" required>
+            </div>
+            <button type="submit" class="btn" style="border-color: var(--pink); color: var(--pink);">🚀 Deploy to Global Cloud Shelf</button>
+        </form>
+    </section>
+
+    <!-- ГЛОБАЛЬНАЯ ПОЛКА ПОЛУЧЕНИЯ -->
+    <section>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <span class="pix" style="color: var(--green); margin-bottom: 0;">📡 Step 2: Active Network Matrix (Cloud Shelf)</span>
+            <button class="btn" style="margin-top: 0; width: auto; padding: 5px 15px; font-size: 0.8rem;" onclick="loadGlobalMatrix()">🔄 Refresh Matrix</button>
+        </div>
+        <div id="globalGrid" class="media-grid">
+            <p style="color: var(--muted); font-style: italic;">Connecting to data beams...</p>
+        </div>
+    </section>
+</div>
+
+<script>
+    // Вечный бесплатный публичный идентификатор коробки для обмена данными
+    const BIN_ID = "6707ce1bacd3cb34a8947cfc";
+    const API_URL = "https://jsonbin.io" + BIN_ID;
+    const MASTER_KEY = "$2a$10$UoZ7rZ8H2R0bMh/rLWe1C.8iV4e/M2uU3uQ3yA6AeaF9gD869F6w.";
+
+    const matrixForm = document.getElementById('matrixForm');
+    const globalGrid = document.getElementById('globalGrid');
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadGlobalMatrix();
+        
+        // Никнеймы игроков намертво фиксируются на ПК и не стираются при F5
+        if (localStorage.getItem('pndp_permanent_nick')) {
+            document.getElementById('cAuthor').value = localStorage.getItem('pndp_permanent_nick');
+        }
+    });
+
+    // 1. ОТПРАВКА КАРТРИДЖА В ИНТЕРНЕТ ОДНИМ НАЖАТИЕМ
+    if (matrixForm) {
+        matrixForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const title = document.getElementById('cTitle').value;
+            const author = document.getElementById('cAuthor').value;
+            const desc = document.getElementById('cDesc').value;
+            const fileInput = document.getElementById('cFile').files[0];
+
+            if (!fileInput) return;
+
+            // Навсегда запоминаем ник создателя на этой машине
+            localStorage.setItem('pndp_permanent_nick', author);
+
+            const reader = new FileReader();
+            reader.onload = async function(event) {
+                const savContent = event.target.result;
+
+                // Сначала выкачиваем текущий список игр из облака, чтобы не стереть чужие картриджи
+                try {
+                    const getRes = await fetch(API_URL + "/latest", {
+                        headers: { "X-Master-Key": MASTER_KEY }
+                    });
+                    const resData = await getRes.json();
+                    let currentList = resData.record && resData.record.games ? resData.record.games : [];
+
+                    // Создаем новый картридж
+                    const newCartridge = {
+                        id: Date.now(),
+                        title: title,
+                        author: author,
+                        desc: desc,
+                        savData: btoa(unescape(encodeURIComponent(savContent))), // Безопасное сжатие тяжелых спецсимволов .sav в легкий Base64
+                        savName: fileInput.name
+                    };
+
+                    currentList.push(newCartridge);
+
+                    // Пушим обновленный список обратно в интернет-ячейку
+                    const putRes = await fetch(API_URL, {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-Master-Key": MASTER_KEY
+                        },
+                        body: JSON.stringify({ games: currentList })
+                    });
+
+                    if (putRes.ok) {
+                        alert("🚀 '" + title + "' successfully synced with Global Cloud Shelf!");
+                        matrixForm.reset();
+                        document.getElementById('cAuthor').value = localStorage.getItem('pndp_permanent_nick');
+                        loadGlobalMatrix();
+                    } else {
+                        throw new Error();
+                    }
+                } catch (err) {
+                    alert("Matrix synchronization fault. Try again.");
+                }
+            };
+            reader.readAsText(fileInput);
+        });
+    }
+
+    // 2. ЗАГРУЗКА И СИНХРОНИЗАЦИЯ КАРТОЧЕК МЕЖДУ БРАУЗЕРАМИ
+    async function loadGlobalMatrix() {
+        if (!globalGrid) return;
+        globalGrid.innerHTML = '<p style="color: var(--muted); font-style: italic;">Synchronizing with neural matrix streams...</p>';
+        
+        try {
+            const response = await fetch(API_URL + "/latest", {
+                headers: { "X-Master-Key": MASTER_KEY }
+            });
+            if (!response.ok) throw new Error();
+            
+            const resData = await response.json();
+            const cartridges = resData.record && resData.record.games ? resData.record.games : [];
+
+            globalGrid.innerHTML = '';
+
+            if (cartridges.length === 0) {
+                globalGrid.innerHTML = '<p style="color: var(--muted); font-style: italic;">Matrix shelf is empty. Deploy your cartridge first!</p>';
+                return;
+            }
+
+            // Отрисовываем карточки от новых к старым
+            cartridges.reverse().forEach(cart => {
+                const card = document.createElement('div');
+                card.className = 'm-box';
+                card.innerHTML = `
+                    <h3 style="color: var(--blue); margin-bottom: 5px;">${cart.title}</h3>
+                    <p style="font-size: 0.8rem; color: var(--pink); margin-bottom: 8px;">By ${cart.author}</p>
+                    <p style="font-size: 0.85rem; color: var(--text); margin-bottom: 15px; min-height: 40px;">${cart.desc}</p>
+                    <button class="btn" style="margin-top:0;" onclick="downloadDecodedSav('${cart.savData}', '${cart.savName}')">⚡ Install .SAV</button>
+                `;
+                globalGrid.appendChild(card);
+            });
+        } catch (error) {
+            globalGrid.innerHTML = '<p style="color: var(--red); padding: 10px;">[OFFLINE] Connection to Matrix grid failed. Rate limits exceeded.</p>';
+        }
+    }
+
+    // 3. АВТОМАТИЧЕСКАЯ РАСПАКОВКА И СКАЧИВАНИЕ ФАЙЛА НА ПК ИГРОКА
+    function downloadDecodedSav(base64Content, fileName) {
+        try {
+            const rawContent = decodeURIComponent(escape(atob(base64Content)));
+            const blob = new Blob([rawContent], { type: "text/plain" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            
+            // ИСПРАВЛЕНО: Безопасное скачивание распакованного .sav обратно на диск ПК
+            link.download = fileName || "cartridge.sav";
+            link.click();
+        } catch (err) {
+            alert("Matrix extraction failed.");
+        }
+    }
+</script>
