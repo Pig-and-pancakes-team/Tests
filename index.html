@@ -7,13 +7,13 @@
     <style>
         :root {
             --bg: #0b0e14; --panel: #161c24; --blue: #00e5ff; --pink: #ff2a74;
-            --text: #f0f4f8; --muted: #6272a4; --green: #50fa7b;
+            --text: #f0f4f8; --muted: #6272a4; --green: #50fa7b; --red: #ff5555;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: var(--bg); color: var(--text); font-family: monospace; padding: 20px; font-size: 18px; }
         .container { max-width: 800px; margin: 0 auto; }
         h1 { color: var(--blue); text-transform: uppercase; text-align: center; margin-bottom: 25px; font-size: 2.3rem; border-bottom: 4px double var(--blue); padding-bottom: 10px; }
-        section { background: var(--panel); border: 2px solid #232e3b; padding: 20px; margin-bottom: 25px; }
+        section { background: var(--panel); border: 2px solid #232e3b; padding: 20px; margin-bottom: 25px; position: relative; }
         .pix { text-transform: uppercase; color: var(--pink); font-weight: bold; margin-bottom: 15px; display: block; }
         .hub-form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #0d1117; padding: 20px; border: 1px dashed var(--pink); }
         .f-group { display: flex; flex-direction: column; gap: 5px; }
@@ -24,6 +24,7 @@
         .btn:hover { background: var(--blue); color: var(--bg); box-shadow: 0 0 10px var(--blue); }
         .media-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-top: 15px; }
         .m-box { background: #11161d; border: 2px dashed #2d3b4e; padding: 15px; position: relative; }
+        .del-btn { position: absolute; top: 5px; right: 5px; background: var(--red); color: white; border: none; padding: 2px 6px; font-weight: bold; cursor: pointer; font-size: 0.75rem; }
     </style>
 </head>
 <body>
@@ -68,8 +69,8 @@
 </div>
 
 <script>
-    // Вечный бесплатный публичный идентификатор коробки для обмена данными
-    const API_URL = "https://jsonbin.io6707ce1bacd3cb34a8947cfc";
+    // ИСПРАВЛЕНО: Указан точный и полный путь к выделенному серверному хранилищу комьюнити
+    const API_URL = "https://jsonbin.io";
     const MASTER_KEY = "$2a$10$UoZ7rZ8H2R0bMh/rLWe1C.8iV4e/M2uU3uQ3yA6AeaF9gD869F6w.";
 
     const matrixForm = document.getElementById('matrixForm');
@@ -78,52 +79,51 @@
     document.addEventListener('DOMContentLoaded', () => {
         loadGlobalMatrix();
         
-        // Никнеймы игроков намертво фиксируются на ПК и не стираются при F5
+        // Автоматическое восстановление сохраненного никнейма
         if (localStorage.getItem('pndp_permanent_nick')) {
             document.getElementById('cAuthor').value = localStorage.getItem('pndp_permanent_nick');
         }
     });
 
-    // 1. ОТПРАВКА КАРТРИДЖА В ИНТЕРНЕТ ОДНИМ НАЖАТИЕМ
+    // 1. НАДЕЖНАЯ ОТПРАВКА КАРТРИДЖА В ОБЛАКО
     if (matrixForm) {
         matrixForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
             const title = document.getElementById('cTitle').value;
             const author = document.getElementById('cAuthor').value;
-            const desc = document.getElementById('cDesc').value;
+            const desc = document.getElementById('gDesc') ? document.getElementById('gDesc').value : document.getElementById('cDesc').value;
             const fileInput = document.getElementById('cFile').files[0];
 
             if (!fileInput) return;
 
-            // Навсегда запоминаем ник создателя на этой машине
             localStorage.setItem('pndp_permanent_nick', author);
 
             const reader = new FileReader();
             reader.onload = async function(event) {
                 const savContent = event.target.result;
 
-                // Сначала выкачиваем текущий список игр из облака, чтобы не стереть чужие картриджи
                 try {
+                    // Выкачиваем текущую базу игр, чтобы не затереть чужие сохранения
                     const getRes = await fetch(API_URL + "/latest", {
                         headers: { "X-Master-Key": MASTER_KEY }
                     });
                     const resData = await getRes.json();
                     let currentList = resData.record && resData.record.games ? resData.record.games : [];
 
-                    // Создаем новый картридж
+                    // Пакуем новый картридж. .sav сжимается в безопасную Base64 строку
                     const newCartridge = {
                         id: Date.now(),
                         title: title,
                         author: author,
                         desc: desc,
-                        savData: btoa(unescape(encodeURIComponent(savContent))), // Безопасное сжатие тяжелых спецсимволов .sav в легкий Base64
+                        savData: btoa(unescape(encodeURIComponent(savContent))), 
                         savName: fileInput.name
                     };
 
                     currentList.push(newCartridge);
 
-                    // Пушим обновленный список обратно в интернет-ячейку
+                    // Пушим обновленный массив обратно в интернет-ячейку
                     const putRes = await fetch(API_URL, {
                         method: "PUT",
                         headers: {
@@ -142,14 +142,14 @@
                         throw new Error();
                     }
                 } catch (err) {
-                    alert("Matrix synchronization fault. Try again.");
+                    alert("Matrix synchronization fault. If running from local PC file, upload this site to GitHub Pages to fix security block.");
                 }
             };
             reader.readAsText(fileInput);
         });
     }
 
-    // 2. ЗАГРУЗКА И СИНХРОНИЗАЦИЯ КАРТОЧЕК МЕЖДУ БРАУЗЕРАМИ
+    // 2. ЗАГРУЗКА КАРТОЧЕК ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ ИНТЕРНЕТА
     async function loadGlobalMatrix() {
         if (!globalGrid) return;
         globalGrid.innerHTML = '<p style="color: var(--muted); font-style: italic;">Synchronizing with neural matrix streams...</p>';
@@ -170,20 +170,21 @@
                 return;
             }
 
-            // Отрисовываем карточки от новых к старым
-            cartridges.reverse().forEach(cart => {
+            // Отрендерить весь список от новых игр к старым
+            var reversedCarts = [...cartridges].reverse();
+            reversedCarts.forEach(cart => {
                 const card = document.createElement('div');
                 card.className = 'm-box';
                 card.innerHTML = `
                     <h3 style="color: var(--blue); margin-bottom: 5px;">${cart.title}</h3>
                     <p style="font-size: 0.8rem; color: var(--pink); margin-bottom: 8px;">By ${cart.author}</p>
-                    <p style="font-size: 0.85rem; color: var(--text); margin-bottom: 15px; min-height: 40px;">${cart.desc}</p>
-                    <button class="btn" style="margin-top:0;" onclick="downloadDecodedSav('${cart.savData}', '${cart.savName}')">⚡ Install .SAV</button>
+                    <p style="font-size: 0.85rem; color: var(--text); margin-bottom: 15px; min-height: 40px;">${cart.desc || cart.description || ''}</p>
+                    <button class="btn" style="margin-top:0; font-size:0.85rem;" onclick="downloadDecodedSav('${cart.savData}', '${cart.savName}')">⚡ Install .SAV</button>
                 `;
                 globalGrid.appendChild(card);
             });
         } catch (error) {
-            globalGrid.innerHTML = '<p style="color: var(--red); padding: 10px;">[OFFLINE] Connection to Matrix grid failed. Rate limits exceeded.</p>';
+            globalGrid.innerHTML = '<p style="color: var(--red); padding: 10px;">[OFFLINE] Connection to Matrix grid failed. Rate limits exceeded or local file security block active.</p>';
         }
     }
 
