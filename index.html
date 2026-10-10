@@ -149,12 +149,11 @@
             incomingGrid.innerHTML = '';
             const card = document.createElement('div');
             card.className = 'm-box';
-            card.innerHTML = `
-                <h3 style="color: var(--blue); margin-bottom: 5px;">${cart.t}</h3>
-                <p style="font-size: 0.8rem; color: var(--pink); margin-bottom: 8px;">By ${cart.a}</p>
-                <p style="font-size: 0.85rem; color: var(--text); margin-bottom: 15px; min-height: 40px;">${cart.d}</p>
-                <button class="btn" style="margin-top:0; font-size:0.85rem;" onclick="downloadUrlSav('${cart.s}', '${encodeURIComponent(cart.n)}')">⚡ Install .SAV</button>
-            `;
+            card.innerHTML = '<h3 style="color: var(--blue); margin-bottom: 5px;">' + cart.t + '</h3>' +
+                             '<p style="font-size: 0.8rem; color: var(--pink); margin-bottom: 8px;">By ' + cart.a + '</p>' +
+                             '<p style="font-size: 0.85rem; color: var(--text); margin-bottom: 15px; min-height: 40px;">' + cart.d + '</p>' +
+                             '<button class="btn" style="margin-top:0; font-size:0.85rem;" onclick="downloadUrlSav(\'' + cart.s + '\', \'' + encodeURIComponent(cart.n) + '\')">⚡ Install .SAV</button>';
+            
             incomingGrid.appendChild(card);
         } catch (err) {
             incomingGrid.innerHTML = '<p style="color: var(--red);">❌ Failed to extract cartridge from URL anchor.</p>';
