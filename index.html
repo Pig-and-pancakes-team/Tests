@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-and-P Editor | Universal Matrix Hub</title>
+    <title>P-and-P Editor | Serverless Matrix Link</title>
     <style>
         :root {
             --bg: #0b0e14; --panel: #161c24; --blue: #00e5ff; --pink: #ff2a74;
-            --text: #f0f4f8; --muted: #6272a4; --green: #50fa7b; --red: #ff5555;
+            --text: #f0f4f8; --muted: #6272a4; --green: #50fa7b;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: var(--bg); color: var(--text); font-family: monospace; padding: 20px; font-size: 18px; }
         .container { max-width: 800px; margin: 0 auto; }
         h1 { color: var(--blue); text-transform: uppercase; text-align: center; margin-bottom: 25px; font-size: 2.3rem; border-bottom: 4px double var(--blue); padding-bottom: 10px; }
-        section { background: var(--panel); border: 2px solid #232e3b; padding: 20px; margin-bottom: 25px; position: relative; }
+        section { background: var(--panel); border: 2px solid #232e3b; padding: 20px; margin-bottom: 25px; }
         .pix { text-transform: uppercase; color: var(--pink); font-weight: bold; margin-bottom: 15px; display: block; }
         .hub-form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #0d1117; padding: 20px; border: 1px dashed var(--pink); }
         .f-group { display: flex; flex-direction: column; gap: 5px; }
@@ -23,19 +23,18 @@
         .btn { display: inline-block; width: 100%; padding: 10px; background: transparent; border: 2px solid var(--blue); color: var(--blue); font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 15px; font-family: inherit; text-align: center; text-decoration: none; }
         .btn:hover { background: var(--blue); color: var(--bg); box-shadow: 0 0 10px var(--blue); }
         .media-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-top: 15px; }
-        .m-box { background: #11161d; border: 2px dashed #2d3b4e; padding: 15px; position: relative; }
-        .del-btn { position: absolute; top: 5px; right: 5px; background: var(--red); color: white; border: none; padding: 2px 6px; font-weight: bold; cursor: pointer; font-size: 0.75rem; }
+        .m-box { background: #11161d; border: 2px dashed #2d3b4e; padding: 15px; position: relative; text-align: left; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🛰 P&P Universal Internet Matrix</h1>
+    <h1>🛰 P&P Serverless Matrix Link</h1>
 
-    <!-- ФОРМА ОТПРАВКИ -->
+    <!-- БЛОК 1: ГЕНЕРАЦИЯ ССЫЛКИ -->
     <section>
-        <span class="pix">💾 Step 1: Broadcast Cartridge into Internet Grid</span>
-        <form id="matrixForm" class="hub-form">
+        <span class="pix">📦 Step 1: Pack Cartridge Into URL</span>
+        <form id="linkForm" class="hub-form">
             <div class="f-group">
                 <label>Game Title</label>
                 <input type="text" id="cTitle" required placeholder="e.g., Error Knight">
@@ -52,155 +51,132 @@
                 <label>Select .SAV File</label>
                 <input type="file" id="cFile" accept=".sav" required>
             </div>
-            <button type="submit" class="btn" style="border-color: var(--pink); color: var(--pink);">🚀 Deploy to Global Cloud Shelf</button>
+            <button type="submit" class="btn" style="border-color: var(--pink); color: var(--pink);">⚡ Generate Shareable Link</button>
         </form>
+        
+        <!-- Поле с готовой сгенерированной ссылкой -->
+        <div id="urlWrapper" style="display: none; margin-top: 20px; border-top: 1px dashed #2d3b4e; padding-top: 15px;">
+            <label style="color: var(--green);">✔️ Shareable URL generated successfully:</label>
+            <input type="text" id="generatedUrl" readonly style="color: var(--green); border-color: var(--green);">
+            <p style="font-size: 0.8rem; color: var(--muted); margin-top: 5px;">📋 Copy this URL and send it to other players. It contains your entire game!</p>
+        </div>
     </section>
 
-    <!-- ГЛОБАЛЬНАЯ ПОЛКА ПОЛУЧЕНИЯ -->
+    <!-- БЛОК 2: ПОЛКА ПОЛУЧЕНИЯ ИЗ ССЫЛКИ -->
     <section>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <span class="pix" style="color: var(--green); margin-bottom: 0;">📡 Step 2: Active Network Matrix (Cloud Shelf)</span>
-            <button class="btn" style="margin-top: 0; width: auto; padding: 5px 15px; font-size: 0.8rem;" onclick="loadGlobalMatrix()">🔄 Refresh Matrix</button>
-        </div>
-        <div id="globalGrid" class="media-grid">
-            <p style="color: var(--muted); font-style: italic;">Connecting to data beams...</p>
+        <span class="pix" style="color: var(--green);">📡 Step 2: Incoming Shared Cartridge</span>
+        <div id="incomingGrid" class="media-grid">
+            <p style="color: var(--muted); font-style: italic;">No shared cartridge loaded. Open the site via a shared link to see it.</p>
         </div>
     </section>
 </div>
 
 <script>
-    // ИСПРАВЛЕНО: Указан точный и полный путь к выделенному серверному хранилищу комьюнити
-    const API_URL = "https://jsonbin.io";
-    const MASTER_KEY = "$2a$10$UoZ7rZ8H2R0bMh/rLWe1C.8iV4e/M2uU3uQ3yA6AeaF9gD869F6w.";
-
-    const matrixForm = document.getElementById('matrixForm');
-    const globalGrid = document.getElementById('globalGrid');
+    const linkForm = document.getElementById('linkForm');
+    const urlWrapper = document.getElementById('urlWrapper');
+    const generatedUrl = document.getElementById('generatedUrl');
+    const incomingGrid = document.getElementById('incomingGrid');
 
     document.addEventListener('DOMContentLoaded', () => {
-        loadGlobalMatrix();
-        
-        // Автоматическое восстановление сохраненного никнейма
-        if (localStorage.getItem('pndp_permanent_nick')) {
-            document.getElementById('cAuthor').value = localStorage.getItem('pndp_permanent_nick');
+        // Намертво фиксируем никнейм автора на ПК, он не сотрется при F5
+        if (localStorage.getItem('pndp_saved_nick')) {
+            document.getElementById('cAuthor').value = localStorage.getItem('pndp_permanent_nick') || localStorage.getItem('pndp_saved_nick');
         }
+        
+        // Автоматически проверяем адресную строку на наличие переданной игры
+        parseIncomingUrlLink();
     });
 
-    // 1. НАДЕЖНАЯ ОТПРАВКА КАРТРИДЖА В ОБЛАКО
-    if (matrixForm) {
-        matrixForm.addEventListener('submit', function(e) {
+    // 1. УПАКОВКА ИГРЫ В ДЛИННУЮ ТЕКСТОВУЮ ССЫЛКУ
+    if (linkForm) {
+        linkForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
             const title = document.getElementById('cTitle').value;
             const author = document.getElementById('cAuthor').value;
-            const desc = document.getElementById('gDesc') ? document.getElementById('gDesc').value : document.getElementById('cDesc').value;
-            const fileInput = document.getElementById('cFile').files[0];
+            const desc = document.getElementById('cDesc').value;
+            const fileInput = document.getElementById('cFile').files;
 
             if (!fileInput) return;
 
-            localStorage.setItem('pndp_permanent_nick', author);
+            localStorage.setItem('pndp_saved_nick', author);
 
             const reader = new FileReader();
-            reader.onload = async function(event) {
-                const savContent = event.target.result;
+            reader.onload = function(event) {
+                const savText = event.target.result;
 
-                try {
-                    // Выкачиваем текущую базу игр, чтобы не затереть чужие сохранения
-                    const getRes = await fetch(API_URL + "/latest", {
-                        headers: { "X-Master-Key": MASTER_KEY }
-                    });
-                    const resData = await getRes.json();
-                    let currentList = resData.record && resData.record.games ? resData.record.games : [];
+                // Создаем легкий сжатый объект данных
+                const payload = {
+                    t: title,
+                    a: author,
+                    d: desc,
+                    s: btoa(unescape(encodeURIComponent(savText))), // Сжимаем спецсимволы в безопасный Base64
+                    n: fileInput.name
+                };
 
-                    // Пакуем новый картридж. .sav сжимается в безопасную Base64 строку
-                    const newCartridge = {
-                        id: Date.now(),
-                        title: title,
-                        author: author,
-                        desc: desc,
-                        savData: btoa(unescape(encodeURIComponent(savContent))), 
-                        savName: fileInput.name
-                    };
+                // Переводим объект в зашифрованную строку для URL
+                const encryptedPayload = encodeURIComponent(JSON.stringify(payload));
+                
+                // Склеиваем текущий адрес сайта с хэш-данными игры
+                const cleanBaseUrl = window.location.href.split('#')[0];
+                const finalLink = cleanBaseUrl + "#cart=" + encryptedPayload;
 
-                    currentList.push(newCartridge);
-
-                    // Пушим обновленный массив обратно в интернет-ячейку
-                    const putRes = await fetch(API_URL, {
-                        method: "PUT",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-Master-Key": MASTER_KEY
-                        },
-                        body: JSON.stringify({ games: currentList })
-                    });
-
-                    if (putRes.ok) {
-                        alert("🚀 '" + title + "' successfully synced with Global Cloud Shelf!");
-                        matrixForm.reset();
-                        document.getElementById('cAuthor').value = localStorage.getItem('pndp_permanent_nick');
-                        loadGlobalMatrix();
-                    } else {
-                        throw new Error();
-                    }
-                } catch (err) {
-                    alert("Matrix synchronization fault. If running from local PC file, upload this site to GitHub Pages to fix security block.");
-                }
+                // Выводим готовую ссылку на экран
+                generatedUrl.value = finalLink;
+                urlWrapper.style.display = 'block';
+                generatedUrl.select();
             };
             reader.readAsText(fileInput);
         });
     }
 
-    // 2. ЗАГРУЗКА КАРТОЧЕК ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ ИНТЕРНЕТА
-    async function loadGlobalMatrix() {
-        if (!globalGrid) return;
-        globalGrid.innerHTML = '<p style="color: var(--muted); font-style: italic;">Synchronizing with neural matrix streams...</p>';
+    // 2. ЧТЕНИЕ И СКАЧИВАНИЕ ИЗ АДРЕСНОЙ СТРОКИ ДРУГОГО ПК
+    function parseIncomingUrlLink() {
+        if (!incomingGrid) return;
         
+        const hash = window.location.hash;
+        if (!hash || hash.indexOf("#cart=") !== 0) return;
+
         try {
-            const response = await fetch(API_URL + "/latest", {
-                headers: { "X-Master-Key": MASTER_KEY }
-            });
-            if (!response.ok) throw new Error();
-            
-            const resData = await response.json();
-            const cartridges = resData.record && resData.record.games ? resData.record.games : [];
+            // Извлекаем зашифрованную посылку из адреса
+            const encryptedData = hash.substring(6);
+            const decryptedText = decodeURIComponent(encryptedData);
+            const cart = JSON.parse(decryptedText);
 
-            globalGrid.innerHTML = '';
+            if (!cart.s || !cart.t) return;
 
-            if (cartridges.length === 0) {
-                globalGrid.innerHTML = '<p style="color: var(--muted); font-style: italic;">Matrix shelf is empty. Deploy your cartridge first!</p>';
-                return;
-            }
-
-            // Отрендерить весь список от новых игр к старым
-            var reversedCarts = [...cartridges].reverse();
-            reversedCarts.forEach(cart => {
-                const card = document.createElement('div');
-                card.className = 'm-box';
-                card.innerHTML = `
-                    <h3 style="color: var(--blue); margin-bottom: 5px;">${cart.title}</h3>
-                    <p style="font-size: 0.8rem; color: var(--pink); margin-bottom: 8px;">By ${cart.author}</p>
-                    <p style="font-size: 0.85rem; color: var(--text); margin-bottom: 15px; min-height: 40px;">${cart.desc || cart.description || ''}</p>
-                    <button class="btn" style="margin-top:0; font-size:0.85rem;" onclick="downloadDecodedSav('${cart.savData}', '${cart.savName}')">⚡ Install .SAV</button>
-                `;
-                globalGrid.appendChild(card);
-            });
-        } catch (error) {
-            globalGrid.innerHTML = '<p style="color: var(--red); padding: 10px;">[OFFLINE] Connection to Matrix grid failed. Rate limits exceeded or local file security block active.</p>';
+            // Рисуем карточку полученной игры
+            incomingGrid.innerHTML = '';
+            const card = document.createElement('div');
+            card.className = 'm-box';
+            card.innerHTML = `
+                <h3 style="color: var(--blue); margin-bottom: 5px;">${cart.t}</h3>
+                <p style="font-size: 0.8rem; color: var(--pink); margin-bottom: 8px;">By ${cart.a}</p>
+                <p style="font-size: 0.85rem; color: var(--text); margin-bottom: 15px; min-height: 40px;">${cart.d}</p>
+                <button class="btn" style="margin-top:0; font-size:0.85rem;" onclick="downloadUrlSav('${cart.s}', '${encodeURIComponent(cart.n)}')">⚡ Install .SAV</button>
+            `;
+            incomingGrid.appendChild(card);
+        } catch (err) {
+            incomingGrid.innerHTML = '<p style="color: var(--red);">❌ Failed to extract cartridge from URL anchor.</p>';
         }
     }
 
-    // 3. АВТОМАТИЧЕСКАЯ РАСПАКОВКА И СКАЧИВАНИЕ ФАЙЛА НА ПК ИГРОКА
-    function downloadDecodedSav(base64Content, fileName) {
+    // 3. АВТОРАСПАКОВКА И СКАЧИВАНИЕ .SAV ФАЙЛА НА ЖЕСТКИЙ ДИСК
+    function downloadUrlSav(base64Content, encodedName) {
         try {
-            const rawContent = decodeURIComponent(escape(atob(base64Content)));
-            const blob = new Blob([rawContent], { type: "text/plain" });
+            const fileName = decodeURIComponent(encodedName);
+            const rawSavText = decodeURIComponent(escape(atob(base64Content)));
+            
+            const blob = new Blob([rawSavText], { type: "text/plain" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            
-            // ИСПРАВЛЕНО: Безопасное скачивание распакованного .sav обратно на диск ПК
             link.download = fileName || "cartridge.sav";
             link.click();
-        } catch (err) {
-            alert("Matrix extraction failed.");
+        } catch (e) {
+            alert("Data extraction crashed.");
         }
     }
 </script>
+
+</body>
+</html>
