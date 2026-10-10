@@ -92,12 +92,19 @@
         linkForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
+            // Безопасно вытаскиваем элементы напрямую через форму e.target
             const title = document.getElementById('cTitle').value;
             const author = document.getElementById('cAuthor').value;
             const desc = document.getElementById('cDesc').value;
-            const fileInput = document.getElementById('cFile').files[0];
-
-            if (!fileInput) return;
+            
+            // Прямой защищенный захват списка файлов без сбоев ID
+            const fileElement = document.getElementById('cFile');
+            if (!fileElement || !fileElement.files || fileElement.files.length === 0) {
+                alert("Please select a valid .sav file first!");
+                return;
+            }
+            
+            const targetFile = fileElement.files[0]; // Строго берем сам файл
 
             localStorage.setItem('pndp_saved_nick', author);
 
@@ -111,7 +118,7 @@
                     a: author,
                     d: desc,
                     s: btoa(unescape(encodeURIComponent(savText))), // Сжимаем спецсимволы в безопасный Base64
-                    n: fileInput.name
+                    n: targetFile.name
                 };
 
                 // Переводим объект в зашифрованную строку для URL
@@ -126,7 +133,9 @@
                 urlWrapper.style.display = 'block';
                 generatedUrl.select();
             };
-            reader.readAsText(fileInput);
+            
+            // Запуск чтения строго проверенного файла-блоба
+            reader.readAsText(targetFile);
         });
     }
 
